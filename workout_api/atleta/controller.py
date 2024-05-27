@@ -76,14 +76,14 @@ async def query(db_session: DatabaseDependency) -> list[AtletaOut]:
 
 
 @router.get(
-    '/{id}', 
+    '/{id}_{nome}_{cpf}', 
     summary='Consulta um Atleta pelo id',
     status_code=status.HTTP_200_OK,
     response_model=AtletaOut,
 )
-async def get(id: UUID4, db_session: DatabaseDependency) -> AtletaOut:
+async def get(id: UUID4, nome: str, cpf: str, db_session: DatabaseDependency) -> AtletaOut:
     atleta: AtletaOut = (
-        await db_session.execute(select(AtletaModel).filter_by(id=id))
+        await db_session.execute(select(AtletaModel).filter_by(id=id, nome=nome, cpf=cpf))
     ).scalars().first()
 
     if not atleta:
