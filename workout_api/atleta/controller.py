@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 from uuid import uuid4
 from fastapi import APIRouter, Body, HTTPException, status
 from pydantic import UUID4
@@ -11,6 +12,9 @@ from workout_api.centro_treinamento.models import CentroTreinamentoModel
 from workout_api.contrib.dependencies import DatabaseDependency
 from sqlalchemy.future import select
 from sqlalchemy.exc import IntegrityError
+
+from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
+from fastapi_pagination import LimitOffsetPage, paginate
 
 router = APIRouter()
 
@@ -74,14 +78,15 @@ async def post(
     '/', 
     summary='Consultar todos os Atletas',
     status_code=status.HTTP_200_OK,
-    response_model=list[AtletaBasicOut],
+    response_model=LimitOffsetPage[AtletaBasicOut],
 )
-async def query(db_session: DatabaseDependency) -> list[AtletaBasicOut]:
+async def query(db_session: DatabaseDependency) -> LimitOffsetPage[AtletaBasicOut]:
 
     atletas: list[AtletaOut] = (await db_session.execute(select(AtletaModel))).scalars().all()
-    return [AtletaBasicOut.model_validate(atleta) for atleta in atletas]
+    atletas_basic_out = [AtletaBasicOut.model_validate(atleta) for atleta in atletas]
+    return paginate(atletas_basic_out)
 
-
+    
 
 
 @router.get(
